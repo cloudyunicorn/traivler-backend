@@ -1,15 +1,15 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import List, Optional
 
 class TravelRequest(BaseModel):
-    origin: str
-    destination: str
-    days: int
-    budget: Optional[str]
-    travelers: int              
-    preferences: List[str]
-    hotel_type: Optional[str] = "mid-range"    # e.g., budget, mid-range, luxury
-    transport_mode: Optional[str] = "flight"
+    origin: str = Field(..., min_length=2, max_length=100)
+    destination: str = Field(..., min_length=2, max_length=150)
+    days: int = Field(..., gt=0, le=30)
+    budget: Optional[str] = Field(None, max_length=50)
+    travelers: int = Field(..., gt=0, le=20)
+    preferences: List[str] = Field(..., max_length=10)
+    hotel_type: Optional[str] = Field("mid-range", max_length=50)
+    transport_mode: Optional[str] = Field("flight", max_length=50)
 
 class FlightInfo(BaseModel):
     route: str

@@ -1,11 +1,18 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 import json
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 from app.graph import app_graph
 from app.schemas.travel import TravelRequest
 
+limiter = Limiter(key_func=get_remote_address)
 app = FastAPI()
+
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 app.add_middleware(
     CORSMiddleware,
@@ -16,12 +23,14 @@ app.add_middleware(
 )
 
 @app.get("/")
-def read_root():
+@limiter.limit("20/minute")
+def read_root(request: Request):
     return {"status": "running"}
 
 
 @app.post("/plan-trip")
-async def plan_trip(req: TravelRequest):
+@limiter.limit("5/minute")
+async def plan_trip(request: Request, req: TravelRequest):
     result = await app_graph.ainvoke({
         "user_input": req.model_dump()
     })
@@ -30,7 +39,8 @@ async def plan_trip(req: TravelRequest):
 
 
 @app.post("/stream-plan")
-async def stream_plan(req: TravelRequest):
+@limiter.limit("5/minute")
+async def stream_plan(request: Request, req: TravelRequest):
     async def event_generator():
         yield f"data: {json.dumps({'node': 'start', 'status': 'completed'})}\n\n"
         
