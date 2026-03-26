@@ -1,0 +1,93 @@
+from langgraph.graph import StateGraph
+from app.state.travel_state import TravelState
+
+from app.agents.planner import planner_agent
+from app.agents.search_agent import search_agent
+from app.agents.flight_agent import flight_agent
+from app.agents.hotel_agent import hotel_agent
+from app.agents.itinerary_agent import itinerary_agent
+from app.agents.optimizer import optimizer_agent
+
+
+def planner_node(state: TravelState):
+    return {"plan": planner_agent(state["user_input"])}
+
+
+def search_node(state: TravelState):
+    data = state["user_input"]
+    return {
+        "places": search_agent(
+            data["destination"],
+            data["preferences"]
+        )
+    }
+
+
+def flight_node(state: TravelState):
+    data = state["user_input"]
+
+    return {
+        "flights": flight_agent(
+            data["origin"],
+            data["destination"],
+            data["travelers"]
+        )
+    }
+
+
+def hotel_node(state: TravelState):
+    data = state["user_input"]
+
+    return {
+        "hotels": hotel_agent(
+            data["destination"],
+            data["travelers"],
+            data.get("hotel_type", "mid-range")
+        )
+    }
+
+
+def itinerary_node(state: TravelState):
+    data = state["user_input"]
+
+    return {
+        "itinerary": itinerary_agent(
+            data["origin"],
+            data["destination"],
+            data["days"],
+            state["places"],
+            data["preferences"]
+        )
+    }
+
+
+def optimizer_node(state: TravelState):
+    structured = optimizer_agent(state)
+
+    return {
+        "final_plan": structured.dict()
+    }
+
+
+graph = StateGraph(TravelState)
+
+graph.add_node("planner", planner_node)
+graph.add_node("search", search_node)
+graph.add_node("flight", flight_node)
+graph.add_node("hotel", hotel_node)
+graph.add_node("itinerary", itinerary_node)
+graph.add_node("optimizer", optimizer_node)
+
+graph.set_entry_point("planner")
+
+graph.add_edge("planner", "search")
+graph.add_edge("planner", "flight")
+graph.add_edge("planner", "hotel")
+
+graph.add_edge("search", "itinerary")
+graph.add_edge("flight", "itinerary")
+graph.add_edge("hotel", "itinerary")
+
+graph.add_edge("itinerary", "optimizer")
+
+app_graph = graph.compile()
