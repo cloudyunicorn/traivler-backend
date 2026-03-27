@@ -11,6 +11,18 @@ class TravelRequest(BaseModel):
     hotel_type: Optional[str] = Field("mid-range", max_length=50)
     transport_mode: Optional[str] = Field("flight", max_length=50)
 
+    # Personalization fields
+    travel_intent: str = Field(..., max_length=50)
+    group_type: str = Field(..., max_length=30)
+    age_group: str = Field(..., max_length=10)
+    has_kids: bool = Field(...)
+    fitness_level: str = Field(..., max_length=20)
+    food_preferences: List[str] = Field(default_factory=list)
+    trip_pace: str = Field(..., max_length=20)
+    must_avoid: List[str] = Field(default_factory=list)
+    special_occasion: Optional[str] = Field(None, max_length=50)
+    special_notes: Optional[str] = Field(None, max_length=500)
+
 class FlightInfo(BaseModel):
     route: str
     avg_cost: str

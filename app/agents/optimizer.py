@@ -5,17 +5,30 @@ llm = get_llm()
 
 
 def optimizer_agent(state):
-    prompt = f"""
-    Create a structured travel plan.
+    user_input = state.get("user_input", {})
 
-    Data:
+    prompt = f"""
+    Create a structured travel plan from the following data.
+
+    Raw Data:
     {state}
 
+    Traveler Context:
+    - Group: {user_input.get("group_type", "general")} ({user_input.get("age_group", "")})
+    - Intent: {user_input.get("travel_intent", "exploration")}
+    - Pace: {user_input.get("trip_pace", "moderate")}
+    - Kids: {user_input.get("has_kids", False)}
+    - Fitness: {user_input.get("fitness_level", "moderate")}
+    - Food: {", ".join(user_input.get("food_preferences", []))}
+    - Avoids: {", ".join(user_input.get("must_avoid", []))}
+    - Occasion: {user_input.get("special_occasion") or "none"}
+    - Notes: {user_input.get("special_notes") or "none"}
+
     Output JSON with:
-    - summary
+    - summary (mention the personalization — group type, intent, occasion if any)
     - flights (route, avg_cost, duration)
-    - hotels (avg_price_per_night, suggested_areas)
-    - itinerary (list of days with activities)
+    - hotels (avg_price_per_night, suggested_areas suitable for the group)
+    - itinerary (list of days with activities tailored to the profile)
     - cost_breakdown
     """
 

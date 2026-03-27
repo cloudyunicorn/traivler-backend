@@ -18,7 +18,11 @@ def search_node(state: TravelState):
     return {
         "places": search_agent(
             data["destination"],
-            data["preferences"]
+            data["preferences"],
+            travel_intent=data.get("travel_intent", ""),
+            must_avoid=data.get("must_avoid", []),
+            food_preferences=data.get("food_preferences", []),
+            group_type=data.get("group_type", "")
         )
     }
 
@@ -42,7 +46,9 @@ def hotel_node(state: TravelState):
         "hotels": hotel_agent(
             data["destination"],
             data["travelers"],
-            data.get("hotel_type", "mid-range")
+            data.get("hotel_type", "mid-range"),
+            group_type=data.get("group_type", ""),
+            has_kids=data.get("has_kids", False)
         )
     }
 
@@ -56,7 +62,15 @@ def itinerary_node(state: TravelState):
             data["destination"],
             data["days"],
             state["places"],
-            data["preferences"]
+            data["preferences"],
+            trip_pace=data.get("trip_pace", "moderate"),
+            fitness_level=data.get("fitness_level", "moderate"),
+            has_kids=data.get("has_kids", False),
+            group_type=data.get("group_type", ""),
+            travel_intent=data.get("travel_intent", ""),
+            must_avoid=data.get("must_avoid", []),
+            special_occasion=data.get("special_occasion", ""),
+            special_notes=data.get("special_notes", "")
         )
     }
 
