@@ -4,6 +4,8 @@ from typing import List, Optional
 class TravelRequest(BaseModel):
     origin: str = Field(..., min_length=2, max_length=100)
     destination: str = Field(..., min_length=2, max_length=150)
+    start_date: Optional[str] = Field(None, max_length=10)  # YYYY-MM-DD
+    end_date: Optional[str] = Field(None, max_length=10)     # YYYY-MM-DD
     days: int = Field(..., gt=0, le=30)
     budget: Optional[str] = Field(None, max_length=50)
     travelers: int = Field(..., gt=0, le=20)
@@ -42,6 +44,9 @@ class DayPlan(BaseModel):
 class CostBreakdown(BaseModel):
     flights: str
     hotels: str
+    food: str
+    local_transport: str
+    activities: str
     total_estimate: str
 
 

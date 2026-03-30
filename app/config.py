@@ -7,6 +7,7 @@ load_dotenv()
 class Settings:
     # 🔑 API Keys
     OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")
+    TRAVELPAYOUTS_TOKEN: str = os.getenv("TRAVELPAYOUTS_TOKEN", "")
     
     # 🧠 LLM Settings
     MODEL_NAME: str = os.getenv("MODEL_NAME", "gpt-4o-mini")

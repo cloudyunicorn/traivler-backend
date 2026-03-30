@@ -1,12 +1,13 @@
+from typing import List, Optional
 from app.core.llm import get_llm 
 
 llm = get_llm()
 
 
-def itinerary_agent(origin: str, destination: str, days: int, places: list, preferences: list,
-                     trip_pace: str = "moderate", fitness_level: str = "moderate",
-                     has_kids: bool = False, group_type: str = "", travel_intent: str = "",
-                     must_avoid: list = None, special_occasion: str = "", special_notes: str = ""):
+async def itinerary_agent(origin: str, destination: str, days: int, places: list, preferences: list,
+                      trip_pace: str = "moderate", fitness_level: str = "moderate",
+                      has_kids: bool = False, group_type: str = "", travel_intent: str = "",
+                      must_avoid: Optional[List] = None, special_occasion: str = "", special_notes: str = ""):
     avoid_text = ", ".join(must_avoid or []) or "nothing specific"
 
     prompt = f"""
@@ -44,4 +45,4 @@ def itinerary_agent(origin: str, destination: str, days: int, places: list, pref
     Make it personalized, balanced, and realistic.
     """
 
-    return llm.invoke(prompt)
+    return await llm.ainvoke(prompt)

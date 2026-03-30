@@ -2,7 +2,7 @@ from app.core.llm import get_llm
 
 llm = get_llm()
 
-def planner_agent(user_input: dict):
+async def planner_agent(user_input: dict):
     avoid_text = ", ".join(user_input.get("must_avoid", [])) or "nothing specific"
     food_text = ", ".join(user_input.get("food_preferences", [])) or "no specific preference"
 
@@ -37,4 +37,4 @@ def planner_agent(user_input: dict):
     - itinerary (paced according to trip_pace and fitness_level)
     """
 
-    return llm.invoke(prompt)
+    return await llm.ainvoke(prompt)

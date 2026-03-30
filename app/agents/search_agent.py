@@ -1,7 +1,8 @@
+from typing import List, Optional
 from app.tools.search_tool import search
 
 
-def search_agent(destination: str, preferences: list, travel_intent: str = "", must_avoid: list = None, food_preferences: list = None, group_type: str = ""):
+async def search_agent(destination: str, preferences: list, travel_intent: str = "", must_avoid: Optional[List] = None, food_preferences: Optional[List] = None, group_type: str = ""):
     must_avoid = must_avoid or []
     food_preferences = food_preferences or []
     pref_text = " ".join(preferences)
@@ -22,4 +23,4 @@ def search_agent(destination: str, preferences: list, travel_intent: str = "", m
         parts.append(f"avoiding {' '.join(must_avoid)}")
 
     query = " ".join(parts)
-    return search(query)
+    return await search(query)

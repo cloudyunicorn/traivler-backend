@@ -9,6 +9,7 @@ dependencies = [
     "dotenv>=0.9.9",
     "duckduckgo-search>=8.1.1",
     "fastapi>=0.135.2",
+    "httpx>=0.28.1",
     "langchain>=1.2.13",
     "langchain-community>=0.4.1",
     "langchain-openai>=1.1.12",

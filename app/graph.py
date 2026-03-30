@@ -3,20 +3,21 @@ from app.state.travel_state import TravelState
 
 from app.agents.planner import planner_agent
 from app.agents.search_agent import search_agent
+from app.agents.route_agent import route_agent
 from app.agents.flight_agent import flight_agent
 from app.agents.hotel_agent import hotel_agent
 from app.agents.itinerary_agent import itinerary_agent
 from app.agents.optimizer import optimizer_agent
 
 
-def planner_node(state: TravelState):
-    return {"plan": planner_agent(state["user_input"])}
+async def planner_node(state: TravelState):
+    return {"plan": await planner_agent(state["user_input"])}
 
 
-def search_node(state: TravelState):
+async def search_node(state: TravelState):
     data = state["user_input"]
     return {
-        "places": search_agent(
+        "places": await search_agent(
             data["destination"],
             data["preferences"],
             travel_intent=data.get("travel_intent", ""),
@@ -27,37 +28,56 @@ def search_node(state: TravelState):
     }
 
 
-def flight_node(state: TravelState):
+async def flight_node(state: TravelState):
+    """Route Agent + Flight Agent combined in one node to keep fan-in symmetric."""
     data = state["user_input"]
 
+    # Step 1: Route agent determines best destination airport
+    route = await route_agent(
+        origin=data["origin"],
+        destination=data["destination"],
+        budget=data.get("budget", "moderate")
+    )
+
+    # Step 2: Flight agent searches using resolved airport codes
+    origin = route.get("origin_code", data["origin"])
+    destination = route.get("destination_code", data["destination"])
+
     return {
-        "flights": flight_agent(
-            data["origin"],
-            data["destination"],
-            data["travelers"]
+        "route_info": route,
+        "flights": await flight_agent(
+            origin,
+            destination,
+            data["travelers"],
+            budget=data.get("budget", "mid-range"),
+            start_date=data.get("start_date", ""),
+            end_date=data.get("end_date", ""),
+            return_origin=route.get("return_origin_code", destination)
         )
     }
 
 
-def hotel_node(state: TravelState):
+async def hotel_node(state: TravelState):
     data = state["user_input"]
 
     return {
-        "hotels": hotel_agent(
+        "hotels": await hotel_agent(
             data["destination"],
             data["travelers"],
             data.get("hotel_type", "mid-range"),
             group_type=data.get("group_type", ""),
-            has_kids=data.get("has_kids", False)
+            has_kids=data.get("has_kids", False),
+            start_date=data.get("start_date", ""),
+            end_date=data.get("end_date", "")
         )
     }
 
 
-def itinerary_node(state: TravelState):
+async def itinerary_node(state: TravelState):
     data = state["user_input"]
 
     return {
-        "itinerary": itinerary_agent(
+        "itinerary": await itinerary_agent(
             data["origin"],
             data["destination"],
             data["days"],
@@ -75,8 +95,8 @@ def itinerary_node(state: TravelState):
     }
 
 
-def optimizer_node(state: TravelState):
-    structured = optimizer_agent(state)
+async def optimizer_node(state: TravelState):
+    structured = await optimizer_agent(state)
 
     return {
         "final_plan": structured.dict()
@@ -94,10 +114,12 @@ graph.add_node("optimizer", optimizer_node)
 
 graph.set_entry_point("planner")
 
+# After planner: 3 symmetric parallel branches (all 2 hops to itinerary)
 graph.add_edge("planner", "search")
 graph.add_edge("planner", "flight")
 graph.add_edge("planner", "hotel")
 
+# All 3 branches converge into itinerary
 graph.add_edge("search", "itinerary")
 graph.add_edge("flight", "itinerary")
 graph.add_edge("hotel", "itinerary")
