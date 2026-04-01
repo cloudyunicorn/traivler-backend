@@ -2,11 +2,14 @@ from typing import List, Optional
 from app.tools.search_tool import search
 
 
-async def search_agent(destination: str, preferences: list, travel_intent: str = "", must_avoid: Optional[List] = None, food_preferences: Optional[List] = None, group_type: str = ""):
+async def search_agent(destination: str, preferences: list, travel_intent: str = "", must_avoid: Optional[List] = None, food_preferences: Optional[List] = None, group_type: str = "", destination_name: str = ""):
     must_avoid = must_avoid or []
     food_preferences = food_preferences or []
     pref_text = " ".join(preferences)
-    
+
+    # Use full destination name for search to avoid ambiguous codes (e.g. "GB" → "United Kingdom")
+    search_destination = destination_name.strip() if destination_name and destination_name.strip() else destination
+
     # Build a richer search query
     parts = []
     if group_type:
@@ -14,11 +17,11 @@ async def search_agent(destination: str, preferences: list, travel_intent: str =
     if travel_intent:
         parts.append(travel_intent)
     parts.append(pref_text)
-    parts.append(f"places to visit in {destination}")
-    
+    parts.append(f"places to visit in {search_destination}")
+
     if food_preferences:
         parts.append(f"with {' '.join(food_preferences)} food")
-    
+
     if must_avoid:
         parts.append(f"avoiding {' '.join(must_avoid)}")
 

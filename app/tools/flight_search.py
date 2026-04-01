@@ -57,12 +57,10 @@ async def _fetch_round_trip(
     departure_date: str, return_date: str,
     currency: str, limit: int
 ) -> dict:
-    """Single API call for same-city round trip."""
-    params = {
+    """Single API call for same-city round trip, with month-level fallback."""
+    base_params = {
         "origin": origin,
         "destination": destination,
-        "departure_at": departure_date,
-        "return_at": return_date,
         "one_way": "false",
         "direct": "false",
         "currency": currency,
@@ -70,13 +68,18 @@ async def _fetch_round_trip(
         "sorting": "price",
         "token": settings.TRAVELPAYOUTS_TOKEN
     }
-    
-    data = await _api_call(params)
-    
-    results = []
-    for item in data:
-        results.append(_parse_flight(item))
-    
+
+    # Try progressively broader date ranges until we get results
+    date_attempts = _build_date_attempts(departure_date, return_date)
+    data = []
+    for dep_at, ret_at in date_attempts:
+        params = {**base_params, "departure_at": dep_at, "return_at": ret_at}
+        data = await _api_call(params)
+        if data:
+            break
+
+    results = [_parse_flight(item) for item in data]
+
     return {
         "outbound": results,
         "return": [],  # Round-trip price is combined in the API response
@@ -131,11 +134,10 @@ async def _fetch_one_way(
     origin: str, destination: str,
     departure_date: str, currency: str, limit: int
 ) -> List[dict]:
-    """Single one-way API call."""
-    params = {
+    """One-way API call with month-level fallback."""
+    base_params = {
         "origin": origin,
         "destination": destination,
-        "departure_at": departure_date,
         "one_way": "true",
         "direct": "false",
         "currency": currency,
@@ -143,9 +145,56 @@ async def _fetch_one_way(
         "sorting": "price",
         "token": settings.TRAVELPAYOUTS_TOKEN
     }
-    
-    data = await _api_call(params)
+
+    date_attempts = _build_date_attempts(departure_date)
+    data = []
+    for dep_at, *_ in date_attempts:
+        params = {**base_params, "departure_at": dep_at}
+        data = await _api_call(params)
+        if data:
+            break
+
     return [_parse_flight(item) for item in data]
+
+
+def _build_date_attempts(departure_date: str, return_date: str = "") -> list:
+    """
+    Build a list of (departure_at, return_at) tuples to try in order:
+    1. Exact YYYY-MM-DD (if provided)
+    2. Month-only YYYY-MM for the same month
+    3. Next month YYYY-MM (in case the date is near month end)
+    """
+    from datetime import date
+
+    attempts = []
+
+    # Attempt 1 — exact date (only when a full YYYY-MM-DD was given)
+    if departure_date and len(departure_date) == 10:
+        attempts.append((departure_date, return_date))
+
+    # Attempt 2 — month-level (always available as a broader query)
+    dep_month = departure_date[:7]  # "YYYY-MM"
+    ret_month = return_date[:7] if return_date else ""
+    if (dep_month, ret_month) != (departure_date, return_date):  # avoid duplicate
+        attempts.append((dep_month, ret_month))
+
+    # Attempt 3 — next month (catches searches near end-of-month boundaries)
+    try:
+        y, m = int(dep_month[:4]), int(dep_month[5:7])
+        next_m = m + 1 if m < 12 else 1
+        next_y = y if m < 12 else y + 1
+        next_dep = f"{next_y}-{next_m:02d}"
+        next_ret = ""
+        if ret_month:
+            ry, rm = int(ret_month[:4]), int(ret_month[5:7])
+            nrm = rm + 1 if rm < 12 else 1
+            nry = ry if rm < 12 else ry + 1
+            next_ret = f"{nry}-{nrm:02d}"
+        attempts.append((next_dep, next_ret))
+    except Exception:
+        pass
+
+    return attempts
 
 
 async def _api_call(params: dict) -> list:

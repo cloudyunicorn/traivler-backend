@@ -11,6 +11,7 @@ class Settings:
     
     # 🧠 LLM Settings
     MODEL_NAME: str = os.getenv("MODEL_NAME", "gpt-4o-mini")
+    MODEL_NAME2: str = os.getenv("MODEL_NAME2", "gpt-5-mini")
     TEMPERATURE: float = float(os.getenv("TEMPERATURE", 0.3))
     
     # 🌍 App Settings

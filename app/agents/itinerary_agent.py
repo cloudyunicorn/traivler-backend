@@ -7,11 +7,14 @@ llm = get_llm()
 async def itinerary_agent(origin: str, destination: str, days: int, places: list, preferences: list,
                       trip_pace: str = "moderate", fitness_level: str = "moderate",
                       has_kids: bool = False, group_type: str = "", travel_intent: str = "",
-                      must_avoid: Optional[List] = None, special_occasion: str = "", special_notes: str = ""):
+                      must_avoid: Optional[List] = None, special_occasion: str = "", special_notes: str = "",
+                      destination_name: str = ""):
     avoid_text = ", ".join(must_avoid or []) or "nothing specific"
+    # Use full name in prompt to avoid ambiguous codes like "GB"
+    display_destination = destination_name.strip() if destination_name and destination_name.strip() else destination
 
     prompt = f"""
-    Plan a {days}-day trip from {origin} to {destination}.
+    Plan a {days}-day trip from {origin} to {display_destination}.
 
     Traveler Profile:
     - Group Type: {group_type or "general"}

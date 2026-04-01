@@ -23,7 +23,8 @@ async def search_node(state: TravelState):
             travel_intent=data.get("travel_intent", ""),
             must_avoid=data.get("must_avoid", []),
             food_preferences=data.get("food_preferences", []),
-            group_type=data.get("group_type", "")
+            group_type=data.get("group_type", ""),
+            destination_name=data.get("destination_name", "")
         )
     }
 
@@ -90,7 +91,8 @@ async def itinerary_node(state: TravelState):
             travel_intent=data.get("travel_intent", ""),
             must_avoid=data.get("must_avoid", []),
             special_occasion=data.get("special_occasion", ""),
-            special_notes=data.get("special_notes", "")
+            special_notes=data.get("special_notes", ""),
+            destination_name=data.get("destination_name", "")
         )
     }
 

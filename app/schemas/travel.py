@@ -4,6 +4,7 @@ from typing import List, Optional
 class TravelRequest(BaseModel):
     origin: str = Field(..., min_length=2, max_length=100)
     destination: str = Field(..., min_length=2, max_length=150)
+    destination_name: Optional[str] = Field(None, max_length=200)  # Full name, e.g. "United Kingdom"
     start_date: Optional[str] = Field(None, max_length=10)  # YYYY-MM-DD
     end_date: Optional[str] = Field(None, max_length=10)     # YYYY-MM-DD
     days: int = Field(..., gt=0, le=30)

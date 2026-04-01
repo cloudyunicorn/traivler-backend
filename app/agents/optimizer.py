@@ -1,7 +1,9 @@
+from app.core.llm2 import get_llm2
 from app.schemas.travel import TravelResponse
 from app.core.llm import get_llm
 
 llm = get_llm()
+llm2 = get_llm2()
 
 
 async def optimizer_agent(state):
@@ -102,5 +104,5 @@ async def optimizer_agent(state):
     - cost_breakdown (flights, hotels, food, local_transport, activities, total_estimate — ALL concrete {currency} amounts)
     """
 
-    structured_llm = llm.with_structured_output(TravelResponse)
+    structured_llm = llm2.with_structured_output(TravelResponse)
     return await structured_llm.ainvoke(prompt)
