@@ -8,7 +8,7 @@ async def itinerary_agent(origin: str, destination: str, days: int, places: list
                       trip_pace: str = "moderate", fitness_level: str = "moderate",
                       has_kids: bool = False, group_type: str = "", travel_intent: str = "",
                       must_avoid: Optional[List] = None, special_occasion: str = "", special_notes: str = "",
-                      destination_name: str = ""):
+                      destination_name: str = "", arrival_airport: str = "", departure_airport: str = ""):
     avoid_text = ", ".join(must_avoid or []) or "nothing specific"
     # Use full name in prompt to avoid ambiguous codes like "GB"
     display_destination = destination_name.strip() if destination_name and destination_name.strip() else destination
@@ -44,6 +44,7 @@ async def itinerary_agent(origin: str, destination: str, days: int, places: list
     - If pace is relaxed, include free time and rest periods
     - If there's a special occasion, add a memorable experience for it
     - Strictly avoid anything in the must-avoid list
+    - IMPORTANT ROUTING: The traveler arrives at {arrival_airport or display_destination} on Day 1, and departs from {departure_airport or display_destination} on Day {days}. You MUST trace a logical map path starting in the arrival city and geographically progressing to end in the departure city!
 
     Make it personalized, balanced, and realistic.
     """

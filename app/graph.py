@@ -78,6 +78,7 @@ async def hotel_node(state: TravelState):
 
 async def itinerary_node(state: TravelState):
     data = state["user_input"]
+    route_info = state.get("route_info", {})
 
     return {
         "itinerary": await itinerary_agent(
@@ -94,7 +95,9 @@ async def itinerary_node(state: TravelState):
             must_avoid=data.get("must_avoid", []),
             special_occasion=data.get("special_occasion", ""),
             special_notes=data.get("special_notes", ""),
-            destination_name=data.get("destination_name", "")
+            destination_name=data.get("destination_name", ""),
+            arrival_airport=route_info.get("destination_code", data["destination"]),
+            departure_airport=route_info.get("return_origin_code", data["destination"])
         )
     }
 
