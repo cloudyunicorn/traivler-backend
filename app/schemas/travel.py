@@ -13,6 +13,7 @@ class TravelRequest(BaseModel):
     preferences: List[str] = Field(..., max_length=10)
     hotel_type: Optional[str] = Field("mid-range", max_length=50)
     transport_mode: Optional[str] = Field("flight", max_length=50)
+    currency: Optional[str] = Field("USD", max_length=10)  # User-selectable currency
 
     # Personalization fields
     travel_intent: str = Field(..., max_length=50)
@@ -43,6 +44,16 @@ class DayPlan(BaseModel):
 
 
 class CostBreakdown(BaseModel):
+    flights: str
+    hotels: str
+    food: str
+    local_transport: str
+    activities: str
+    total_estimate: str
+
+
+class CostVerification(BaseModel):
+    hotel_per_night: str  # Corrected per-night hotel rate
     flights: str
     hotels: str
     food: str

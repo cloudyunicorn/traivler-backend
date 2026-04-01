@@ -10,7 +10,8 @@ async def flight_agent(
     budget: str = "mid-range", 
     start_date: str = "", 
     end_date: str = "",
-    return_origin: str = ""
+    return_origin: str = "",
+    currency: str = "USD"
 ):
     # Use actual dates if provided, otherwise fallback
     if start_date:
@@ -26,7 +27,8 @@ async def flight_agent(
         destination=destination,
         departure_date=departure_date,
         return_date=return_date,
-        return_origin=return_origin
+        return_origin=return_origin,
+        currency=currency
     )
     
     outbound = flight_data.get("outbound", [])
@@ -83,7 +85,7 @@ async def flight_agent(
     else:
         per_person = "Variable (Check online)"
 
-    currency = "INR"
+    # currency is passed as parameter (default USD)
     print(f"  [FLIGHT AGENT] per_person: {per_person} {currency} | travelers: {travelers} | round_trip: {is_round_trip} | open_jaw: {is_open_jaw}")
     
     result = {

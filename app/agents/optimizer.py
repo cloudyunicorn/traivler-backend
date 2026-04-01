@@ -1,9 +1,7 @@
-from app.core.llm2 import get_llm2
 from app.schemas.travel import TravelResponse
 from app.core.llm import get_llm
 
 llm = get_llm()
-llm2 = get_llm2()
 
 
 async def optimizer_agent(state):
@@ -14,7 +12,7 @@ async def optimizer_agent(state):
 
     # Extract real flight pricing data
     per_person = flights.get("per_person", "N/A")
-    currency = flights.get("currency", "INR")
+    currency = user_input.get("currency", "USD")
     travelers = flights.get("total_travelers", user_input.get("travelers", 1))
     is_round_trip = flights.get("is_round_trip", False)
     is_open_jaw = flights.get("is_open_jaw", False)
@@ -49,6 +47,7 @@ async def optimizer_agent(state):
     else:
         duration_str = "Varies"
 
+    destination = user_input.get("destination_name", "").strip() or user_input.get("destination", "")
     prompt = f"""
     Create a structured travel plan from the following data.
 
@@ -69,7 +68,7 @@ async def optimizer_agent(state):
 
     === TRAVELER CONTEXT ===
     - Origin: {user_input.get("origin", "")}
-    - Destination: {user_input.get("destination", "")}
+    - Destination: {destination}
     - Days: {user_input.get("days", 3)}
     - Start Date: {user_input.get("start_date", "N/A")}
     - End Date: {user_input.get("end_date", "N/A")}
@@ -90,7 +89,7 @@ async def optimizer_agent(state):
     3. For flights.duration, use "{duration_str}"
     4. For cost_breakdown.flights, use the EXACT total flight cost: "{flight_price_str}"
     5. For cost_breakdown.hotels, estimate based on hotel data × {user_input.get("days", 3)} nights — give a concrete {currency} amount
-    6. For cost_breakdown.food, estimate daily food cost per person × {travelers} travelers × {user_input.get("days", 3)} days, based on {user_input.get("destination", "the destination")} local prices and budget level ({user_input.get("budget", "moderate")}). Give a concrete {currency} amount like "{currency} 15,000"
+    6. For cost_breakdown.food, estimate daily food cost per person × {travelers} travelers × {user_input.get("days", 3)} days, based on {destination} local prices and budget level ({user_input.get("budget", "moderate")}). Give a concrete {currency} amount like "{currency} 15,000"
     7. For cost_breakdown.local_transport, estimate total cost for local taxis/metro/rideshare for {user_input.get("days", 3)} days at the destination for {travelers} people. Give a concrete {currency} amount
     8. For cost_breakdown.activities, estimate total sightseeing, entry tickets, tours, and experiences cost for {user_input.get("days", 3)} days for {travelers} people. Give a concrete {currency} amount
     9. For cost_breakdown.total_estimate, SUM all 5 categories (flights + hotels + food + transport + activities)
@@ -104,5 +103,5 @@ async def optimizer_agent(state):
     - cost_breakdown (flights, hotels, food, local_transport, activities, total_estimate — ALL concrete {currency} amounts)
     """
 
-    structured_llm = llm2.with_structured_output(TravelResponse)
+    structured_llm = llm.with_structured_output(TravelResponse)
     return await structured_llm.ainvoke(prompt)

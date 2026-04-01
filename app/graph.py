@@ -8,6 +8,7 @@ from app.agents.flight_agent import flight_agent
 from app.agents.hotel_agent import hotel_agent
 from app.agents.itinerary_agent import itinerary_agent
 from app.agents.optimizer import optimizer_agent
+from app.agents.cost_agent import cost_agent
 
 
 async def planner_node(state: TravelState):
@@ -53,7 +54,8 @@ async def flight_node(state: TravelState):
             budget=data.get("budget", "mid-range"),
             start_date=data.get("start_date", ""),
             end_date=data.get("end_date", ""),
-            return_origin=route.get("return_origin_code", destination)
+            return_origin=route.get("return_origin_code", destination),
+            currency=data.get("currency", "USD")
         )
     }
 
@@ -105,6 +107,10 @@ async def optimizer_node(state: TravelState):
     }
 
 
+async def cost_node(state: TravelState):
+    return await cost_agent(state)
+
+
 graph = StateGraph(TravelState)
 
 graph.add_node("planner", planner_node)
@@ -113,6 +119,7 @@ graph.add_node("flight", flight_node)
 graph.add_node("hotel", hotel_node)
 graph.add_node("itinerary", itinerary_node)
 graph.add_node("optimizer", optimizer_node)
+graph.add_node("cost", cost_node)
 
 graph.set_entry_point("planner")
 
@@ -127,5 +134,6 @@ graph.add_edge("flight", "itinerary")
 graph.add_edge("hotel", "itinerary")
 
 graph.add_edge("itinerary", "optimizer")
+graph.add_edge("optimizer", "cost")
 
 app_graph = graph.compile()

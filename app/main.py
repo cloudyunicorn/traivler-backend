@@ -55,7 +55,7 @@ async def stream_plan(request: Request, req: TravelRequest):
                     "node": node_name,
                     "status": "completed"
                 }
-                if node_name == "optimizer" and "final_plan" in state_update:
+                if node_name == "cost" and "final_plan" in state_update:
                     event_data["final_plan"] = state_update["final_plan"]
                 
                 yield f"data: {json.dumps(event_data)}\n\n"

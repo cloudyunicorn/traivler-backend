@@ -6,12 +6,13 @@ async def planner_agent(user_input: dict):
     avoid_text = ", ".join(user_input.get("must_avoid", [])) or "nothing specific"
     food_text = ", ".join(user_input.get("food_preferences", [])) or "no specific preference"
 
+    destination = user_input.get("destination_name", "").strip() or user_input.get("destination", "")
     prompt = f"""
     Plan a highly personalized travel trip.
 
     Trip Details:
     - Origin: {user_input.get("origin")}
-    - Destination: {user_input.get("destination")}
+    - Destination: {destination}
     - Duration: {user_input.get("days")} days
     - Budget: {user_input.get("budget", "moderate")}
     - Travelers: {user_input.get("travelers")}
