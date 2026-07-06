@@ -1,7 +1,6 @@
-from langgraph.graph import StateGraph
+from langgraph.graph import StateGraph, START, END
 from app.state.travel_state import TravelState
 
-from app.agents.planner import planner_agent
 from app.agents.search_agent import search_agent
 from app.agents.route_agent import route_agent
 from app.agents.flight_agent import flight_agent
@@ -9,10 +8,6 @@ from app.agents.hotel_agent import hotel_agent
 from app.agents.itinerary_agent import itinerary_agent
 from app.agents.optimizer import optimizer_agent
 from app.agents.cost_agent import cost_agent
-
-
-async def planner_node(state: TravelState):
-    return {"plan": await planner_agent(state["user_input"])}
 
 
 async def search_node(state: TravelState):
@@ -85,7 +80,7 @@ async def itinerary_node(state: TravelState):
             data["origin"],
             data["destination"],
             data["days"],
-            state["places"],
+            state.get("places", []),
             data["preferences"],
             trip_pace=data.get("trip_pace", "moderate"),
             fitness_level=data.get("fitness_level", "moderate"),
@@ -97,7 +92,9 @@ async def itinerary_node(state: TravelState):
             special_notes=data.get("special_notes", ""),
             destination_name=data.get("destination_name", ""),
             arrival_airport=route_info.get("destination_code", data["destination"]),
-            departure_airport=route_info.get("return_origin_code", data["destination"])
+            departure_airport=route_info.get("return_origin_code", data["destination"]),
+            hotels=state.get("hotels", []),
+            flights=state.get("flights", {})
         )
     }
 
@@ -116,7 +113,6 @@ async def cost_node(state: TravelState):
 
 graph = StateGraph(TravelState)
 
-graph.add_node("planner", planner_node)
 graph.add_node("search", search_node)
 graph.add_node("flight", flight_node)
 graph.add_node("hotel", hotel_node)
@@ -124,12 +120,10 @@ graph.add_node("itinerary", itinerary_node)
 graph.add_node("optimizer", optimizer_node)
 graph.add_node("cost", cost_node)
 
-graph.set_entry_point("planner")
-
-# After planner: 3 symmetric parallel branches (all 2 hops to itinerary)
-graph.add_edge("planner", "search")
-graph.add_edge("planner", "flight")
-graph.add_edge("planner", "hotel")
+# Fan out from START to 3 symmetric parallel branches
+graph.add_edge(START, "search")
+graph.add_edge(START, "flight")
+graph.add_edge(START, "hotel")
 
 # All 3 branches converge into itinerary
 graph.add_edge("search", "itinerary")
@@ -138,5 +132,6 @@ graph.add_edge("hotel", "itinerary")
 
 graph.add_edge("itinerary", "optimizer")
 graph.add_edge("optimizer", "cost")
+graph.add_edge("cost", END)
 
 app_graph = graph.compile()

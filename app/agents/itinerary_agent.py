@@ -8,7 +8,8 @@ async def itinerary_agent(origin: str, destination: str, days: int, places: list
                       trip_pace: str = "moderate", fitness_level: str = "moderate",
                       has_kids: bool = False, group_type: str = "", travel_intent: str = "",
                       must_avoid: Optional[List] = None, special_occasion: str = "", special_notes: str = "",
-                      destination_name: str = "", arrival_airport: str = "", departure_airport: str = ""):
+                      destination_name: str = "", arrival_airport: str = "", departure_airport: str = "",
+                      hotels: Optional[list] = None, flights: Optional[dict] = None):
     avoid_text = ", ".join(must_avoid or []) or "nothing specific"
     # Use full name in prompt to avoid ambiguous codes like "GB"
     display_destination = destination_name.strip() if destination_name and destination_name.strip() else destination
@@ -31,6 +32,12 @@ async def itinerary_agent(origin: str, destination: str, days: int, places: list
     Places to consider:
     {places}
 
+    Hotel constraints/context:
+    {hotels or "No specific hotel information selected yet. Suggest areas matching traveler group type."}
+
+    Flight schedules/info:
+    {flights or "No specific flight details available."}
+
     Activity Preferences:
     {preferences}
 
@@ -44,9 +51,11 @@ async def itinerary_agent(origin: str, destination: str, days: int, places: list
     - If pace is relaxed, include free time and rest periods
     - If there's a special occasion, add a memorable experience for it
     - Strictly avoid anything in the must-avoid list
-    - IMPORTANT ROUTING: The traveler arrives at {arrival_airport or display_destination} on Day 1, and departs from {departure_airport or display_destination} on Day {days}. You MUST trace a logical map path starting in the arrival city and geographically progressing to end in the departure city!
+    - IMPORTANT ROUTING: The traveler arrives at {arrival_airport or display_destination} on Day 1 (consider flight details if provided), and departs from {departure_airport or display_destination} on Day {days}. You MUST trace a logical map path starting in the arrival city and geographically progressing to end in the departure city!
+    - HOTEL GEOGRAPHY: Organize daily activities so they are clustered reasonably around the hotel locations or suggested hotel areas.
 
     Make it personalized, balanced, and realistic.
     """
 
-    return await llm.ainvoke(prompt)
+    response = await llm.ainvoke(prompt)
+    return response.content

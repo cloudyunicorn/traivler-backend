@@ -47,4 +47,21 @@ async def hotel_agent(destination: str, travelers: int, hotel_type: str, group_t
         parts.append(f"check-in {start_date} check-out {end_date}")
 
     query = " ".join(parts)
-    return await search(query)
+    raw_results = await search(query)
+
+    from app.core.llm import get_llm
+    llm = get_llm()
+
+    prompt = f"""You are a travel lodging expert. Based on the following raw web search results for hotel options in {destination}, extract and summarize the best hotel recommendations and average price ranges that match the criteria: "{query}".
+    
+    Raw Search Results:
+    {raw_results}
+    
+    Provide a structured summary of:
+    - Recommended hotel areas or specific hotel names suitable for {group_type or 'general'} travelers
+    - Estimated average price range per night in the requested budget/type ({hotel_type})
+    - Key amenities or reasons why they fit this group (e.g. family-friendly, kid-friendly)
+    """
+    
+    response = await llm.ainvoke(prompt)
+    return response.content

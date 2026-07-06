@@ -1,12 +1,11 @@
-from typing import TypedDict, List, Dict
+from typing import TypedDict, Dict, Any, Optional
 
 
 class TravelState(TypedDict):
-    user_input: Dict
-    plan: Dict
-    route_info: Dict
-    places: List[str]
-    flights: List[str]
-    hotels: List[str]
-    itinerary: List[str]
-    final_plan: str
+    user_input: Dict[str, Any]
+    route_info: Optional[Dict[str, Any]]
+    places: str
+    flights: Dict[str, Any]
+    hotels: str
+    itinerary: str
+    final_plan: Dict[str, Any]
